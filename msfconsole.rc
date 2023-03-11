@@ -1,0 +1,1 @@
+set PROMPT %red[msf] %whiIP:%L (%bluSessions:%grn%S %bluJobs:%grn%J%red)>
