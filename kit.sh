@@ -40,6 +40,9 @@ while [[ $# -gt 0 ]]; do
         -c2)
             c2_sliver_install
             ;;
+        -secret)
+            shh
+            ;;
         -test)
             test
             ;;
