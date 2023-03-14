@@ -16,6 +16,7 @@ APT_PACKAGES=(
 	'neo4j'
 	'nginx'
 	'remmina'
+	'rlwrap'
 	'rpm2cpio'
 	'seclists'
 	'smbmap'
