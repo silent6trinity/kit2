@@ -8,7 +8,6 @@ NC='\033[0m' # No Color
 source bash_funcs.sh
 
 # Prints the description of the script
-echo -e "Pentest environment kit script. use -h or --help for help\n " 
 
 show_help=false
 debug=false   # true or false please
@@ -16,24 +15,18 @@ debug=false   # true or false please
 while [[ $# -gt 0 ]]; do
     case $1 in
         -all)
-            echo "You chose $1"
             system_update
             msfdb_init
             neo4j_init
             c2_sliver_install
             ;;
         -scrub)
-            echo "You chose $1"
-            echo "scrub is currently broken"
-            #hostfilereset
+            scrub
             ;;
         -shells)
-            echo "You chose $1"
-            echo "shells is currently broken"
-            #shell_creation
+            shell_creation
             ;;
         -tools)
-            echo "You chose $1"
             tool_install
             tool_update
             msfdb_init
@@ -42,15 +35,12 @@ while [[ $# -gt 0 ]]; do
             c2_sliver_install
             ;;
         -jon)
-            echo "You chose $1"
             jon
             ;;
         -c2)
-            echo "You chose $1"
             c2_sliver_install
             ;;
         -test)
-            echo "You chose $1"
             test
             ;;
         -h|--help)
@@ -58,6 +48,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "Invalid option: $1"
+            show_help=true
             exit 1
             ;;
     esac
@@ -65,6 +56,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ $# -eq 0 && $show_help = true ]] || [[ $1 == "-h" || $1 == "--help" ]]; then
+    echo -e "Pentest environment kit script. use -h or --help for help\n "
     echo -e "-all: Updates & Upgrades the OS, then installs tools and software once completed.\n"
     echo -e "-scrub: Scrub the /etc/hosts file to the default configuration.\n"
     echo -e "-shells: BROKEN, CURRENTLY DOES NOTHING.\n"

