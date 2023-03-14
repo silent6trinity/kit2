@@ -25,6 +25,7 @@ APT_PACKAGES=(
 	'tilix'
 	'wfuzz'
 	'xfreerdp'
+	'xrdp'
 	'yersinia'
 )
 
