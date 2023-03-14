@@ -11,6 +11,7 @@ source bash_funcs.sh
 echo -e "Pentest environment kit script. use -h or --help for help\n " 
 
 show_help=false
+debug=false   # true or false please
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -19,7 +20,7 @@ while [[ $# -gt 0 ]]; do
             system_update
             msfdb_init
             neo4j_init
-            #c2_sliver_install - Currently broken, so we're disabling for the time being.
+            c2_sliver_install
             ;;
         -scrub)
             echo "You chose $1"
@@ -37,7 +38,7 @@ while [[ $# -gt 0 ]]; do
             msfdb_init
             neo4j_init
             nginx_config
-            #c2_sliver_install - Currently broken, so we're disabling for the time being.
+            c2_sliver_install
             ;;
         -jon)
             echo "You chose $1"
@@ -45,7 +46,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         -c2)
             echo "You chose $1"
-            #c2_sliver_install - Currently broken, so disabled for time being.
+            c2_sliver_install
             ;;
         -test)
             echo "You chose $1"
