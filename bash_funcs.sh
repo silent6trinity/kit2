@@ -4,8 +4,8 @@
 dldir="$HOME/Downloads"
 homedir="$HOME"
 kit_location="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-RED='${RED}'
-GREEN='${GREEN}'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 kit_log="${kit_location}/kit_log.txt"
@@ -399,7 +399,7 @@ system_update() {
 
 #Throw test cases into here, invoke with -test
 function test {
-    #beepboop
+    echo "test"
 }
 
 function jon {
