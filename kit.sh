@@ -24,6 +24,7 @@ while [[ $# -gt 0 ]]; do
         -scrub)
             echo "You chose $1"
             echo "scrub is currently broken"
+            #hostfilereset
             ;;
         -shells)
             echo "You chose $1"
