@@ -26,6 +26,7 @@ APT_PACKAGES=(
 	'sublime-text'
 	'tilix'
 	'wfuzz'
+	'xrdp'
 	'yersinia'
 )
 

