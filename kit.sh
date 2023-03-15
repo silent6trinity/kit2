@@ -7,7 +7,6 @@ NC='\033[0m' # No Color
 
 source bash_funcs.sh
 
-# Prints the description of the script
 
 show_help=false
 debug=false   # true or false please

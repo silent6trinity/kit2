@@ -12,3 +12,4 @@ Automated Kit Framework for setting up a Kali testing environment
 - [ ] Include malicious ansible playbook(s)
 - [ ] Move DarkOp plugins to msf
 - [ ] Make an Active Directory dir in kit - move AD tools to that directory
+- [ ] Download Cyberchef?

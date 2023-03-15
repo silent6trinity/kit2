@@ -29,6 +29,7 @@ APT_PACKAGES=(
 	'wfuzz'
 	'xrdp'
 	'yersinia'
+	'zenity'
 )
 
 GITHUBS=(
