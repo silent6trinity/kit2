@@ -318,7 +318,7 @@ vscodium_install() {
     print_message "info" "Installing VSCodium"
     if [ ! -f '/usr/share/keyrings/vscodium-archive-keyring.gpg' ]; then
         print_message "info" "Downloading and adding VSCodium GPG key to filesystem (within /usr/share/keyrings/)"
-        run_and_log wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg | gpg --dearmor | sudo dd of=/usr/share/keyrings/vscodium-archive-keyring.gpg 2>/dev/null
+        wget -qO - https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg | gpg --dearmor | sudo dd of=/usr/share/keyrings/vscodium-archive-keyring.gpg 2>/dev/null
     else
         print_message "info" "VSCodium GPG key already downloaded"
     fi
@@ -326,7 +326,7 @@ vscodium_install() {
     # Add the repository if it hasn't been already
     if [ ! -f '/etc/apt/sources.list.d/vscodium.list' ]; then
         print_message "info" "Adding VSCodium repository to apt repos in /etc/apt/sources.list.d/"
-        echo 'deb [ signed-by=/usr/share/keyrings/vscodium-archive-keyring.gpg ] https://paulcarroty.gitlab.io/vscodium-deb-rpm-repo/debs vscodium main' | run_and_log sudo tee /etc/apt/sources.list.d/vscodium.list
+        echo 'deb [ signed-by=/usr/share/keyrings/vscodium-archive-keyring.gpg ] https://paulcarroty.gitlab.io/vscodium-deb-rpm-repo/debs vscodium main' | sudo tee /etc/apt/sources.list.d/vscodium.list
     else
         print_message "info" "VSCodium repository was already added"
     fi
