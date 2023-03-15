@@ -347,7 +347,7 @@ system_update() {
 function test {
     #zenity --info --title="Notification" --text="Hello!" --width=200 --height=100
     silence_pcbeep
-    shell_creation2
+    shell_creation
 }
 
 tool_install() {
