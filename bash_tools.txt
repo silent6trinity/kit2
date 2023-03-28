@@ -6,6 +6,7 @@ APT_PACKAGES=(
 	'chromium'
 	'crackmapexec'
 	'enum4linux'
+	'ffuf'
 	'freerdp2-x11'
 	'gobuster'
 	'golang-go'
