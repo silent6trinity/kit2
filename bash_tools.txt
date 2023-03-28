@@ -11,6 +11,8 @@ APT_PACKAGES=(
 	'golang-go'
 	'hollywood'
 	'htop'
+	'ipcalc'
+	'ipcalc-ng'
 	'jxplorer'
 	'metasploit-framework'
 	'neo4j'
