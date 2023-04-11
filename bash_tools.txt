@@ -77,6 +77,7 @@ PYPI_PACKAGES=(
 	'bloodhound'
 	'colorama'
 	'pysnmp'
+	'pyftpdlib'
 )
 
 #Holdover for now unused
