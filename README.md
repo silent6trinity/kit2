@@ -1,5 +1,5 @@
-# Kit
-Automated Kit Framework for setting up a Kali testing environment
+# Kit2
+*Automated Kit Framework for setting up a Kali testing environment*
 
 
 #TODO
