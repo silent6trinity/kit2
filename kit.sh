@@ -68,6 +68,9 @@ if [[ $# -eq 0 && $show_help = true ]] || [[ $1 == "-h" || $1 == "--help" ]]; th
     echo -e "-test: Testing for test purposes, obviously.\n"
 fi
 
+# This is leftover code from some of the previous main pushes, its here for
+## reference purposes, until we square everything up from the previous pushes
+
 #if [ "$all" = true ]; then
 #    echo "You chose all"
 #    nginx_config
