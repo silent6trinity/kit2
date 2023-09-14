@@ -19,6 +19,7 @@ APT_PACKAGES=(
 	'neo4j'
 	'nginx'
 	'odat'
+	'oracle-instantclient-sqlplus'
 	'remmina'
 	'rlwrap'
 	'rpm2cpio'
