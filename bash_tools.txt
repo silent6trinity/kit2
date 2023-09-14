@@ -18,6 +18,7 @@ APT_PACKAGES=(
 	'metasploit-framework'
 	'neo4j'
 	'nginx'
+	'odat'
 	'remmina'
 	'rlwrap'
 	'rpm2cpio'
